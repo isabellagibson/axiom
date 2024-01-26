@@ -1,0 +1,4 @@
+libraries:
+  TV Shows:
+    path: /media
+    media_server: jellyfin

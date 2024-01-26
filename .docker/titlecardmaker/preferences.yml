@@ -1,0 +1,26 @@
+options:
+  source: /source
+  series: /config/tv.yml
+  card_type: fade
+  card_extension: jpg
+  card_dimensions: 1920x1080
+  episode_data_source: sonarr
+  filename_format: "{name} - S{season:02}E{episode:02}" # In sonarr: {Series Title} - S{season:00}E{episode:00}
+  season_folder_format: "Season {season}"
+  image_source_priority: tmdb, jellyfin
+jellyfin:
+  url: http://localhost:8096/
+  api_key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  username: root
+  sync:
+    - card_directory: /media
+    - file: /config/tv.yml
+      libraries:
+        - TV Shows
+tmdb:
+  api_key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  retry_count: 5
+sonarr:
+  url: http://localhost:8989/
+  api_key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  downloaded_only: true

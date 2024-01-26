@@ -1,0 +1,176 @@
+version: "2.1"
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - UMASK_SET=${UMASK}
+    volumes:
+      - ${ROOT}/jellyfin/config:/config
+      - ${ROOT}/jellyfin/cache:/cache
+      - ${MEDIA_FOLDER}:/media
+    ports:
+      - 8096:8096
+    restart: unless-stopped
+  titlecardmaker:
+    network_mode: 'host'
+    image: collinheist/titlecardmaker:master
+    container_name: titlecardmaker
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - UMASK_SET=${UMASK}
+      - TCM_MISSING=/config/missing.yml
+      - TCM_RUNTIME=22:00
+      - TCM_FREQUENCY=12h
+    volumes:
+      - ${ROOT}/titlecardmaker/config:/config
+      - ${ROOT}/titlecardmaker/logs:/maker/logs
+      - ${ROOT}/titlecardmaker/source:/source
+      - ${MEDIA_FOLDER}/tv:/media
+    restart: unless-stopped
+  # -arr's
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${ROOT}/radarr/config:/config
+      - ${MEDIA_FOLDER}/movies:/media
+      - ${MEDIA_FOLDER}/downloads:/downloads
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${ROOT}/sonarr/config:/config
+      - ${MEDIA_FOLDER}/tv:/media
+      - ${MEDIA_FOLDER}/downloads:/downloads
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${ROOT}/bazarr/config:/config
+      - ${MEDIA_FOLDER}:/media
+    ports:
+      - 6767:6767
+    restart: unless-stopped
+  gluetun:
+    container_name: gluetun
+    image: qmcgaw/gluetun
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 8888:8888/tcp # HTTP Proxy
+      - 8388:8388/tcp # Shadowsocks (TCP)
+      - 8388:8388/udp # Shadowsocks (UDP)
+      - 8090:8090 # qBittorrent
+      - 6881:6881 # qBittorrent TCP
+      - 6881:6881/udp # qBittorrent UDP
+      - 50761:50761 # qBittorrent TCP (alternative)
+      - 50761:50761/udp # qBittorrent UDP (alternative)
+    volumes:
+      - ${ROOT}/gluetun:/gluetun
+    environment:
+      - VPN_SERVICE_PROVIDER={OPENVPN_PROVIDER}
+      - OPENVPN_USER=${OPENVPN_USER}
+      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
+  qbittorrent:
+    container_name: qbittorrent
+    image: linuxserver/qbittorrent
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - WEBUI_PORT=8090
+    volumes:
+      - ${ROOT}/qbittorrent:/config
+      - ${MEDIA_FOLDER}/downloads:/downloads
+    network_mode: service:gluetun
+    depends_on: [ "gluetun" ]
+  jellyseerr:
+      container_name: jellyseerr
+      image: fallenbagel/jellyseerr:latest
+      restart: unless-stopped
+      environment:
+          - LOG_LEVEL=debug
+          - TZ=${TZ}
+      ports:
+          - 5055:5055
+      volumes:
+          - ${ROOT}/jellyseerr/config:/app/config
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${ROOT}/prowlarr/config:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - VERSION=docker
+    volumes:
+      - ${ROOT}/plex:/config
+      - ${MEDIA_FOLDER}/tv:/tv
+      - ${MEDIA_FOLDER}/movies:/movies
+  jackett:
+    container_name: jackett
+    image: lscr.io/linuxserver/jackett:latest
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${ROOT}/jackett:/config
+      - ${MEDIA_FOLDER}/downloads:/downloads
+    ports:
+      - 9117:9117
+  ubuntu:
+    container_name: ubuntu
+    image: ubuntu:latest
+    restart: on-failure
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - MAM_TOKEN=${MAM_TOKEN}
+    volumes:
+      - ${ROOT}/ubuntu:/config
+    command: "/bin/bash config/refresh_ip_address.sh"
