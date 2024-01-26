@@ -95,7 +95,7 @@ services:
     volumes:
       - ${ROOT}/gluetun:/gluetun
     environment:
-      - VPN_SERVICE_PROVIDER={OPENVPN_PROVIDER}
+      - VPN_SERVICE_PROVIDER=${OPENVPN_PROVIDER}
       - OPENVPN_USER=${OPENVPN_USER}
       - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
   qbittorrent:
