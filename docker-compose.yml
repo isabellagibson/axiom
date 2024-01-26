@@ -174,3 +174,5 @@ services:
     volumes:
       - ${ROOT}/ubuntu:/config
     command: "/bin/bash config/refresh_ip_address.sh"
+    network_mode: service:gluetun
+    depends_on: [ "gluetun" ]
