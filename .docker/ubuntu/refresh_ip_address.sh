@@ -2,13 +2,10 @@
 
 # This script is used to refresh the IP address of the seedbox on MAM
 
-# Download curl if not installed
 if ! command -v curl &> /dev/null; then
         apt-get update -y
         apt-get install curl -y
 fi
-
-clear
 
 while true;
 do
